@@ -46,4 +46,5 @@ limitations under the License.
 Links
 -----
 [ObjectBox](http://greenrobot.org/objectbox/)
-[Data Oberservers and Reactive Extensions](http://greenrobot.org/objectbox/documentation/data-observers-reactive-extensions/)
+
+[Data Observers and Reactive Extensions](http://greenrobot.org/objectbox/documentation/data-observers-reactive-extensions/)
