@@ -2,19 +2,21 @@ RXJava 2 APIs for ObjectBox
 ===========================
 While ObjectBox brings some reactive features out of the box, this project brings RxJava 2 support.  
 
-Use RxQuery with Query to get:
+Use the class RxQuery to interact with Query objects using:
  * Flowable
  * Observable
  * Single
 
+For general Object changes, you can use RxBoxStore to create an Observable.
+
 Sample Code
 -----------
-Get query result and subscribe to future updates (Object changes will trigger the query):
+Get query results and subscribe to future updates (Object changes will automatically emmit new data):
 
-    ```java
-    Query query = box.query().build();
-    RxQuery.observable(query).subscribe(this);
-    ```
+```java
+Query query = box.query().build();
+RxQuery.observable(query).subscribe(this);
+```
     
 Gradle dependency
 -----------------
