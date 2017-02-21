@@ -1,0 +1,103 @@
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.4'
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven {
+            url "http://objectbox.net/beta-repo/"
+        }
+        mavenLocal()
+    }
+
+    configurations {
+        deployerJars
+    }
+
+    dependencies {
+        deployerJars 'org.apache.maven.wagon:wagon-webdav:1.0-beta-2'
+        deployerJars 'org.apache.maven.wagon:wagon-ftp:2.2'
+    }
+
+    signing {
+        if(project.hasProperty('signing.keyId') && project.hasProperty('signing.password') &&
+                project.hasProperty('signing.secretKeyRingFile')) {
+            sign configurations.archives
+        } else {
+            println "Signing information missing/incomplete for ${project.name}"
+        }
+    }
+
+    // Use afterEvaluate or all dependencies will be lost in the generated POM
+    afterEvaluate {
+        uploadArchives {
+            repositories {
+                mavenDeployer {
+                    def isSnapshot = version.endsWith('-SNAPSHOT')
+                    if (project.hasProperty('preferedRepo') && project.hasProperty('preferedUsername')
+                            && project.hasProperty('preferedPassword')) {
+                        configuration = configurations.deployerJars
+                        // Replace for bintray's dynamic URL
+                        preferedRepo = preferedRepo.replace('__groupId__', project.group)
+                        preferedRepo = preferedRepo.replace('__artifactId__', project.archivesBaseName)
+                        // println preferedRepo
+                        repository(url: preferedRepo) {
+                            authentication(userName: preferedUsername, password: preferedPassword)
+                        }
+                    } else if (project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')) {
+                        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                        def sonatypeRepositoryUrl = isSnapshot ?
+                                "https://oss.sonatype.org/content/repositories/snapshots/"
+                                : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                        repository(url: sonatypeRepositoryUrl) {
+                            authentication(userName: sonatypeUsername, password: sonatypePassword)
+                        }
+                    } else {
+                        println "Settings sonatypeUsername/sonatypePassword missing/incomplete for ${project.name}"
+                    }
+
+                    pom.project {
+                        packaging 'jar'
+                        url 'http://greenrobot.org/'
+
+                        scm {
+                            url 'https://github.com/greenrobot/ObjectBox'
+                            connection 'scm:git@github.com:greenrobot/ObjectBox.git'
+                            developerConnection 'scm:git@github.com:greenrobot/ObjectBox.git'
+                        }
+
+                        developers {
+                            developer {
+                                id 'greenrobot/ObjectBox'
+                                name 'greenrobot/ObjectBox'
+                            }
+                        }
+
+                        issueManagement {
+                            system 'GitHub Issues'
+                            url 'https://github.com/greenrobot/ObjectBox/issues'
+                        }
+
+                        organization {
+                            name 'greenrobot/ObjectBox'
+                            url 'http://greenrobot.org'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
