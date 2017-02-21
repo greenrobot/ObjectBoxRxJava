@@ -1,6 +1,6 @@
 RXJava 2 APIs for ObjectBox
 ===========================
-While ObjectBox brings some reactive features out of the box, this project brings RxJava 2 support.  
+While ObjectBox brings some [reactive features out of the box](http://greenrobot.org/objectbox/documentation/data-observers-reactive-extensions/), this project brings RxJava 2 support.  
 
 Use the class RxQuery to interact with Query objects using:
  * Flowable
@@ -42,3 +42,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+Links
+-----
+[ObjectBox](http://greenrobot.org/objectbox/)
+[Data Oberservers and Reactive Extensions](http://greenrobot.org/objectbox/documentation/data-observers-reactive-extensions/)
