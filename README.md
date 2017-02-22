@@ -24,7 +24,7 @@ Ensure you are using the latest Version (this page may become out of date).
 
 Gradle:
 ```gradle
-compile 'io.objectbox:objectbox-rxjava:0.9.8-RC4'
+compile 'io.objectbox:objectbox-rxjava:0.9.8'
 ```
 
 License
