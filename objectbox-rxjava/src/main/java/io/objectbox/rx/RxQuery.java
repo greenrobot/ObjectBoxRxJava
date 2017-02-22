@@ -16,19 +16,9 @@ package io.objectbox.rx;
 import java.util.List;
 
 import io.objectbox.query.Query;
-import io.objectbox.reactive.DataObserver;
-import io.objectbox.reactive.DataSubscription;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableEmitter;
-import io.reactivex.FlowableOnSubscribe;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.SingleOnSubscribe;
-import io.reactivex.functions.Cancellable;
+import io.objectbox.reactive.*;
+import io.reactivex.*;
+import io.reactivex.functions.*;
 
 /**
  * Static methods to Rx-ify ObjectBox queries.
@@ -39,45 +29,39 @@ public abstract class RxQuery {
      * Uses BackpressureStrategy.BUFFER.
      */
     public static <T> Flowable<T> flowableOneByOne(final Query<T> query) {
-        return flowableOneByOne(query, BackpressureStrategy.BUFFER);
+        return single(query).flattenAsFlowable(ListIdentity.<T>instance());
     }
 
+    static enum ListIdentity implements Function<List<?>, List<?>> {
+        INSTANCE;
+        
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        static <T> Function<List<T>, List<T>> instance() {
+            return (Function)INSTANCE;
+        }
+        
+        @Override
+        public List<?> apply(List<?> t) throws Exception {
+            return t;
+        }
+    }
+
+    
     /**
      * The returned Flowable emits Query results one by one. Once all results have been processed, onComplete is called.
      * Uses given BackpressureStrategy.
      */
+    // FIXME I'd say there is no need for this overload since flowableOneByOne supports full backpressure out of box.
     public static <T> Flowable<T> flowableOneByOne(final Query<T> query, BackpressureStrategy strategy) {
-        return Flowable.create(new FlowableOnSubscribe<T>() {
-            @Override
-            public void subscribe(final FlowableEmitter<T> emitter) throws Exception {
-                createListItemEmitter(query, emitter);
-            }
-
-        }, strategy);
-    }
-
-    static <T> void createListItemEmitter(final Query<T> query, final FlowableEmitter<T> emitter) {
-        final DataSubscription dataSubscription = query.subscribe().observer(new DataObserver<List<T>>() {
-            @Override
-            public void onData(List<T> data) {
-                for (T datum : data) {
-                    if (emitter.isCancelled()) {
-                        return;
-                    } else {
-                        emitter.onNext(datum);
-                    }
-                }
-                if (!emitter.isCancelled()) {
-                    emitter.onComplete();
-                }
-            }
-        });
-        emitter.setCancellable(new Cancellable() {
-            @Override
-            public void cancel() throws Exception {
-                dataSubscription.cancel();
-            }
-        });
+        Flowable<T> f = flowableOneByOne(query);
+        switch (strategy) {
+        case DROP:
+            return f.onBackpressureDrop();
+        case LATEST:
+            return f.onBackpressureLatest();
+        default:
+            return f;
+        }
     }
 
     /**
