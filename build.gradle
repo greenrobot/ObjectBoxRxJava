@@ -1,5 +1,7 @@
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.4'
+    group 'build setup'
+    gradleVersion '4.5.1'
+    distributionType Wrapper.DistributionType.ALL
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
