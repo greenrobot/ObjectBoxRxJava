@@ -145,7 +145,7 @@ public abstract class RxQuery {
                     @Override
                     public void onData(List<T> data) {
                         if (!emitter.isDisposed()) {
-                            if (data.get(0) != null) {
+                            if (!data.isEmpty()) {
                                 emitter.onSuccess(data.get(0));
                             } else {
                                 emitter.onError(new NullPointerException("Item not found"));
