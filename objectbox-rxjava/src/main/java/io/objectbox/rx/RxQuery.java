@@ -130,4 +130,36 @@ public abstract class RxQuery {
             }
         });
     }
+
+    /**
+     * The returned Single emits one Query result as a (first) item.
+     * Throws NullPointerException on error if result is empty.
+     * <p>
+     * equal() or alternative search/filter method should be called on the query before passing it in.
+     */
+    public static <T> Single<T> singleItem(final Query<T> query) {
+        return Single.create(new SingleOnSubscribe<T>() {
+            @Override
+            public void subscribe(final SingleEmitter<T> emitter) throws Exception {
+                final DataSubscription dataSubscription = query.subscribe().single().observer(new DataObserver<List<T>>() {
+                    @Override
+                    public void onData(List<T> data) {
+                        if (!emitter.isDisposed()) {
+                            if (data.get(0) != null) {
+                                emitter.onSuccess(data.get(0));
+                            } else {
+                                emitter.onError(new NullPointerException("Item not found"));
+                            }
+                        }
+                    }
+                });
+                emitter.setCancellable(new Cancellable() {
+                    @Override
+                    public void cancel() throws Exception {
+                        dataSubscription.cancel();
+                    }
+                });
+            }
+        });
+    }
 }
