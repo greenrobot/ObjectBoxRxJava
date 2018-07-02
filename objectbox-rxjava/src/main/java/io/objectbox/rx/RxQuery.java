@@ -113,7 +113,7 @@ public abstract class RxQuery {
         return Single.create(new SingleOnSubscribe<List<T>>() {
             @Override
             public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-                final DataSubscription dataSubscription = query.subscribe().single().observer(new DataObserver<List<T>>() {
+                query.subscribe().single().observer(new DataObserver<List<T>>() {
                     @Override
                     public void onData(List<T> data) {
                         if (!emitter.isDisposed()) {
@@ -121,12 +121,7 @@ public abstract class RxQuery {
                         }
                     }
                 });
-                emitter.setCancellable(new Cancellable() {
-                    @Override
-                    public void cancel() throws Exception {
-                        dataSubscription.cancel();
-                    }
-                });
+                // no need to cancel, single never subscribes
             }
         });
     }
