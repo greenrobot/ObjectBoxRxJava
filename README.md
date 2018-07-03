@@ -1,3 +1,8 @@
+# :rotating_light: PROJECT HAS MOVED :rotating_light:
+This project has moved and is now a part of the [objectbox-java](https://github.com/objectbox/objectbox-java) repository.
+
+Please [submit new issues](https://github.com/objectbox/objectbox-java/issues) there.
+
 RXJava 2 APIs for ObjectBox
 ===========================
 While ObjectBox brings some [reactive features out of the box](http://greenrobot.org/objectbox/documentation/data-observers-reactive-extensions/), this project brings RxJava 2 support.  
