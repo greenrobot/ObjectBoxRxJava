@@ -43,6 +43,7 @@ import static org.junit.Assert.*;
 public class QueryObserverTest implements Observer<List<String>>, SingleObserver<List<String>>, Consumer<String> {
 
     private List<List<String>> receivedChanges = new CopyOnWriteArrayList<>();
+    private List<String> receivedChangesItem = new CopyOnWriteArrayList<>();
     private CountDownLatch latch = new CountDownLatch(1);
 
     private MockQuery<String> mockQuery = new MockQuery<>(false);
@@ -51,6 +52,24 @@ public class QueryObserverTest implements Observer<List<String>>, SingleObserver
     private Throwable error;
 
     private AtomicInteger completedCount = new AtomicInteger();
+
+    private SingleObserver<String> observer = new SingleObserver<String>() {
+        @Override
+        public void onSubscribe(Disposable d) {
+
+        }
+
+        @Override
+        public void onSuccess(String s) {
+            receivedChangesItem.add(s);
+            latch.countDown();
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            error = e;
+        }
+    };
 
     @Before
     public void prep() {
@@ -115,6 +134,36 @@ public class QueryObserverTest implements Observer<List<String>>, SingleObserver
         assertEquals(2, receivedChanges.get(0).size());
 
         receivedChanges.clear();
+        publisher.publish();
+        assertNoMoreResults();
+    }
+
+    @Test
+    public void testSingleItem() {
+        List<String> list = new ArrayList<>();
+        list.add("foo");
+        publisher.setQueryResult(list);
+        Single single = RxQuery.singleItem(mockQuery.getQuery());
+        single.subscribe(observer);
+        assertLatchCountedDown(latch, 2);
+        assertNull(error);
+        assertEquals(1, receivedChangesItem.size());
+        assertEquals("foo", receivedChangesItem.get(0));
+
+        receivedChangesItem.clear();
+        publisher.publish();
+        assertNoMoreResults();
+    }
+
+    @Test
+    public void testSingleItem_returnsError() {
+        publisher.setQueryResult(new ArrayList<String>());
+        Single single = RxQuery.singleItem(mockQuery.getQuery());
+        single.subscribe(observer);
+        assertTrue(error != null && error instanceof NullPointerException);
+        assertEquals(0, receivedChangesItem.size());
+
+        receivedChangesItem.clear();
         publisher.publish();
         assertNoMoreResults();
     }
